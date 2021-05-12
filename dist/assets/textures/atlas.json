@@ -1,0 +1,111 @@
+{
+  "frames": {
+    "asteroid_1.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 65,
+        "h": 50
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 65,
+        "h": 50
+      },
+      "sourceSize": {
+        "w": 65,
+        "h": 50
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "asteroid_0.png": {
+      "frame": {
+        "x": 71,
+        "y": 2,
+        "w": 65,
+        "h": 49
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 65,
+        "h": 49
+      },
+      "sourceSize": {
+        "w": 66,
+        "h": 49
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "space_shuttle.png": {
+      "frame": {
+        "x": 140,
+        "y": 2,
+        "w": 17,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 17,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 18,
+        "h": 26
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "life.png": {
+      "frame": {
+        "x": 140,
+        "y": 32,
+        "w": 18,
+        "h": 22
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 18,
+        "h": 22
+      },
+      "sourceSize": {
+        "w": 18,
+        "h": 22
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "http://free-tex-packer.com",
+    "version": "0.6.7",
+    "image": "atlas.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 160,
+      "h": 56
+    },
+    "scale": 1
+  }
+}
