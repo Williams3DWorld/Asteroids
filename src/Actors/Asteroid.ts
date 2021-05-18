@@ -1,8 +1,8 @@
 import { Sprite } from "pixi.js";
 import Actor from "./Actor";
-import { Game } from "./Game";
-import MovingObjectData from "./MovingObjectData";
-import PhysicsData from "./PhysicsData";
+import { Game } from "../Game/Game";
+import MovingObjectData from "../Data/MovingObjectData";
+import PhysicsData from "../Data/PhysicsData";
 
 export const AsteroidPointData = [100, 50, 20];
 

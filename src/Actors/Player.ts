@@ -1,9 +1,9 @@
 import Actor from "./Actor";
-import { Game } from "./Game";
-import MovingObjectData from "./MovingObjectData";
-import PhysicsData from "./PhysicsData";
+import { Game } from "../Game/Game";
+import MovingObjectData from "../Data/MovingObjectData";
+import PhysicsData from "../Data/PhysicsData";
 import * as TWEEN from "@tweenjs/tween.js";
-import Helpers from "./Helpers";
+import Helpers from "../Utils/Helpers";
 
 export default class Player extends Actor {
   public static readonly DEFUALT_SIZE = 32;

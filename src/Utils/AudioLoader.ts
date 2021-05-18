@@ -1,7 +1,7 @@
-import { SoundData } from "./AudioFileData";
+import { SoundData } from "../Data/AudioFileData";
 import { Howl, Howler } from "howler";
 
-export default class AudioManager {
+export default class AudioLoader {
   private _audioClips: { [key: string]: Howl } = {};
 
   constructor() {

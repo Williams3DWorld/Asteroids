@@ -6,17 +6,18 @@ import {
   InteractionManager,
 } from "pixi.js";
 import * as TWEEN from "@tweenjs/tween.js";
-import AssetLoader from "./AssetLoader";
-import AsteroidField from "./AsteroidField";
-import { GameSettings } from "./GameSettings";
-import PlayerController from "./PlayerController";
-import Helpers from "./Helpers";
-import Actor from "./Actor";
-import GUI from "./GUI";
+import AssetLoader from "../Utils/TextureLoader";
+import AsteroidField from "../IGameEvents/AsteroidField";
+import { GameSettings } from "../Config/GameSettings";
+import PlayerController from "../IGameEvents/PlayerController";
+import Helpers from "../Utils/Helpers";
+import Actor from "../Actors/Actor";
+import GUI from "../IGameEvents/GUI";
 import FontFaceObserver from "fontfaceobserver";
-import { AsteroidPointData } from "./Asteroid";
-import MovingObjectData from "./MovingObjectData";
-import AudioManager from "./AudioManager";
+import { AsteroidPointData } from "../Actors/Asteroid";
+import MovingObjectData from "../Data/MovingObjectData";
+import AudioManager from "../Utils/AudioLoader";
+import VirtualController from "../GUI/VirtualController";
 
 export interface IGameEvents {
   onUpdate(dt: number): void;
@@ -64,6 +65,8 @@ export class Game {
   public score: number;
   public static assetLoader: AssetLoader;
   public static audioManager: AudioManager;
+  public static virtualController: VirtualController;
+  public static mousePos: any = { x: 0, y: 0 };
 
   /* --------------- Wave beat vars --------------- */
   private _waveTimeDuration: number;
@@ -108,7 +111,8 @@ export class Game {
     app.renderer.view.style.display = "block";
     app.renderer.view.style.left = "50%";
     app.renderer.view.style.top = "50%";
-    app.renderer.view.style.transform = "translate3d( -50%, -50%, 0 )";
+    app.renderer.view.style.transform = "translate3d( -50%, -50%, 0)";
+    // app.renderer.view.style.transform = "rotate(0deg)";
 
     this._stage = app.stage;
     this._interaction = new InteractionManager(this._pixiApp.renderer, {});
@@ -120,6 +124,8 @@ export class Game {
 
     Game.assetLoader = new AssetLoader();
     Game.assetLoader.addTextureToPixiLoader("atlas.json", "atlas");
+    if (Helpers.isMobile())
+      Game.assetLoader.addTextureToPixiLoader("controller.json", "controller");
     Game.assetLoader.loadPixiAssets(this.initialise);
 
     Game.audioManager = new AudioManager();
@@ -127,6 +133,7 @@ export class Game {
   };
 
   public initialise = () => {
+    this.initialiseVirtualController();
     this.initialiseGame();
     this.initialiseGUI();
   };
@@ -145,12 +152,29 @@ export class Game {
     });
   };
 
+  private initialiseVirtualController = () => {
+    if (Helpers.isMobile()) {
+      GameSettings.width = window.innerWidth;
+      GameSettings.height = window.innerHeight;
+      this._pixiApp.renderer.resize(GameSettings.width, GameSettings.height);
+      Game.virtualController = new VirtualController();
+    }
+  };
+
   private initialiseGUI = () => {
-    this._gui = new GUI(this);
+    this._gui = new GUI(this, Game.virtualController);
     this._stage.addChild(this._gui);
   };
 
   private initialiseEvents = () => {
+    if (Game.virtualController) {
+      document.ontouchmove = (e) => {
+        const data = this._interaction.eventData.data;
+        Game.mousePos = { x: data.global.x, y: data.global.y };
+      };
+      return;
+    }
+
     document.onmousemove = (e) => {
       const data = this._interaction.eventData.data;
       this._player.updateMousePos(data);
@@ -294,7 +318,7 @@ export class Game {
   public onUpdate = (dt: number) => {
     //GameSettings.width = window.innerWidth;
     //GameSettings.height = window.innerHeight;
-    //this._pixiApp.renderer.resize(GameSettings.width, GameSettings.height);
+    this._pixiApp.renderer.resize(GameSettings.width, GameSettings.height);
 
     this._player.onUpdate(dt);
     this._asteroidField.onUpdate(dt);

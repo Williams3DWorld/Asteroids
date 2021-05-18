@@ -1,5 +1,5 @@
 import { Container } from "pixi.js";
-import { GameSettings } from "./GameSettings";
+import { GameSettings } from "../Config/GameSettings";
 import * as TWEEN from "@tweenjs/tween.js";
 
 export default class Helpers {
@@ -21,17 +21,6 @@ export default class Helpers {
 
   public static magnitude = (vector: any) => {
     return Math.sqrt(vector.x * vector.x + vector.y * vector.y);
-  };
-
-  public static rotateUnitFloat = (float: number) => {
-    let mod = 0;
-    if (float < -1) {
-      mod = float % -1;
-      float = 1 - mod;
-    } else if (float > 1) {
-      mod = float % 1;
-      float = -1 + mod;
-    }
   };
 
   public static dot = (a: any, b: any) => {
@@ -69,9 +58,9 @@ export default class Helpers {
     }
   };
 
-  // public static isMobile = () => {
-  //   return navigator.userAgent.match(
-  //     /(iPhone|iPod|iPad|Android|webOS|BlackBerry|IEMobile|Opera Mini)/i
-  //   );
-  // };
+  public static isMobile = () => {
+    return navigator.userAgent.match(
+      /(iPhone|iPod|iPad|Android|webOS|BlackBerry|IEMobile|Opera Mini)/i
+    );
+  };
 }

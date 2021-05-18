@@ -1,13 +1,14 @@
 import { Container } from "pixi.js";
-import Actor from "./Actor";
-import { Asteroid } from "./Asteroid";
-import AsteroidExplosion from "./AsteroidExplosion";
-import { Game, IGameEvents } from "./Game";
-import { GameSettings } from "./GameSettings";
-import Helpers from "./Helpers";
-import MovingObjectData from "./MovingObjectData";
-import PhysicsData from "./PhysicsData";
+import Actor from "../Actors/Actor";
+import { Asteroid } from "../Actors/Asteroid";
+import AsteroidExplosion from "../FX/AsteroidExplosion";
+import { Game, IGameEvents } from "../Game/Game";
+import { GameSettings } from "../Config/GameSettings";
+import Helpers from "../Utils/Helpers";
+import MovingObjectData from "../Data/MovingObjectData";
+import PhysicsData from "../Data/PhysicsData";
 import * as TWEEN from "@tweenjs/tween.js";
+import GUI from "./GUI";
 
 enum Sides {
   TOP,
@@ -18,7 +19,7 @@ enum Sides {
 
 export default class AsteroidField extends Container implements IGameEvents {
   public static readonly MAX_SPAWN_DELAY = 1;
-  public static readonly DEFAULT_NUM_ASTEROIDS = 3;
+  public static readonly DEFAULT_NUM_ASTEROIDS = 1;
 
   private _asteroids: Array<Actor>;
   public get asteroids(): Array<Actor> {
@@ -86,9 +87,13 @@ export default class AsteroidField extends Container implements IGameEvents {
       : { x: Math.sin(randAngle), y: Math.cos(randAngle) };
 
     const scale =
-      (numLives / MovingObjectData.MAX_LIVES) * Asteroid.DEFUALT_SCALE;
+      (numLives / MovingObjectData.MAX_LIVES) *
+      Asteroid.DEFUALT_SCALE *
+      (Game.virtualController ? GUI.PORTRAIT_SCALAR : 1);
 
-    const speedFinal = speed != null ? speed : this.randAsteroidSpeed(scale);
+    const speedFinal =
+      (speed != null ? speed : this.randAsteroidSpeed(scale)) *
+      (Game.virtualController ? GUI.PORTRAIT_SCALAR : 1);
 
     const physicsData = new PhysicsData(
       Asteroid.DEFUALT_SIZE * scale,
@@ -115,7 +120,10 @@ export default class AsteroidField extends Container implements IGameEvents {
       (Math.random() * (Asteroid.MAX_SPEED - minSpeedMultiplyer) +
         minSpeedMultiplyer);
     const lives = parentData.lives - 1;
-    const scale = (lives / MovingObjectData.MAX_LIVES) * Asteroid.DEFUALT_SCALE;
+    const scale =
+      (lives / MovingObjectData.MAX_LIVES) *
+      Asteroid.DEFUALT_SCALE *
+      (Game.virtualController ? GUI.PORTRAIT_SCALAR : 1);
     const asteroids: Array<Asteroid> = new Array<Asteroid>();
     for (let i = 0; i < 2; i++) {
       asteroids.push(

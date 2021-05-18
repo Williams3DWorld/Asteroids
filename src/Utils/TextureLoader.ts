@@ -1,6 +1,6 @@
 import PIXI, { utils, Loader } from "pixi.js";
 
-export default class AssetLoader {
+export default class TextureLoader {
   private _pixiLoader: Loader;
 
   constructor() {

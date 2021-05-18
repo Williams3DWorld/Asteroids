@@ -1,13 +1,15 @@
-import { Game, IGameEvents } from "./Game";
-import { GameSettings } from "./GameSettings";
-import Player from "./Player";
+import { Game, IGameEvents } from "../Game/Game";
+import { GameSettings } from "../Config/GameSettings";
+import Player from "../Actors/Player";
 import { Container, Texture, Sprite } from "pixi.js";
 import * as TWEEN from "@tweenjs/tween.js";
-import Bullet from "./Bullet";
-import Helpers from "./Helpers";
-import Actor from "./Actor";
-import PlayerExplosion from "./PlayerExplosion";
-import MovingObjectData from "./MovingObjectData";
+import Bullet from "../Actors/Bullet";
+import Helpers from "../Utils/Helpers";
+import Actor from "../Actors/Actor";
+import PlayerExplosion from "../FX/PlayerExplosion";
+import MovingObjectData from "../Data/MovingObjectData";
+import GUI from "./GUI";
+import { VirtualButtons, VirtualControls } from "../GUI/VirtualController";
 
 enum ButtonEvents {
   FIRE,
@@ -49,7 +51,33 @@ export default class PlayerController extends Container implements IGameEvents {
 
     this.resetTransform();
     this.initialiseThruster();
+    this.initialiseVirtualController();
   }
+
+  private initialiseVirtualController = () => {
+    if (Game.virtualController) {
+      const control = Game.virtualController;
+      this.scale.set(GUI.PORTRAIT_SCALAR);
+      control.bindButtonDownEvent(VirtualButtons.BTN_THRUST, () => {
+        if (this.isReady()) this.startThruster();
+      });
+      control.bindButtonUpEvent(VirtualButtons.BTN_THRUST, () => {
+        if (this.isReady()) this.stopThruster();
+      });
+      control.bindButtonDownEvent(VirtualButtons.BTN_FIRE, () => {
+        if (this.isReady()) this.startShooting();
+      });
+      control.bindButtonUpEvent(VirtualButtons.BTN_FIRE, () => {
+        if (this.isReady()) this.stopShooting();
+      });
+      control.bindDialMoveEvent(() => {
+        if (this.isReady()) {
+          const dialAngle = control.dial.angle;
+          this.angle = dialAngle;
+        }
+      });
+    }
+  };
 
   private initialiseThruster = () => {
     this._thrustFlame = new Sprite(Texture.WHITE);
@@ -68,10 +96,20 @@ export default class PlayerController extends Container implements IGameEvents {
       .repeat(Number.POSITIVE_INFINITY);
   };
 
+  private startShooting = () => {
+    this._shooting = true;
+  };
+
+  private stopShooting = () => {
+    this._shooting = false;
+    this._shootIntervalTween?.stop();
+    this._shootIntervalTween = null;
+  };
+
   private startThruster = () => {
     this._thrusting = true;
     this._thrustTween.start();
-    this.updateLook();
+    //this.updateLook();
     this._currentDirection = this.getDirectionFromRadians(this.rotation);
     Game.audioManager.play("thrust");
   };
@@ -83,9 +121,9 @@ export default class PlayerController extends Container implements IGameEvents {
   };
 
   private resetTransform = () => {
-    this.position.x = GameSettings.width / 2;
-    this.position.y = GameSettings.height / 2;
-    this.angle = 0;
+    this.position.x = window.innerWidth / 2;
+    this.position.y = window.innerHeight / 2;
+    this.angle = Game.virtualController ? Game.virtualController.dial.angle : 0;
   };
 
   private reset = () => {
@@ -156,7 +194,7 @@ export default class PlayerController extends Container implements IGameEvents {
   public updateMouseButtonDown = (button: number) => {
     if (this.isReady()) {
       if (button == ButtonEvents.FIRE) {
-        this._shooting = true;
+        this.startShooting();
       } else if (ButtonEvents.THRUST) {
         this.startThruster();
       }
@@ -166,9 +204,7 @@ export default class PlayerController extends Container implements IGameEvents {
   public updateMouseButtonUp = (button: number) => {
     if (this.isReady()) {
       if (button == ButtonEvents.FIRE) {
-        this._shooting = false;
-        this._shootIntervalTween?.stop();
-        this._shootIntervalTween = null;
+        this.stopShooting();
       } else if (ButtonEvents.THRUST) {
         this.stopThruster();
       }
@@ -183,7 +219,8 @@ export default class PlayerController extends Container implements IGameEvents {
 
   private updateThrusting = (dt: number) => {
     const physics = this._player.data.physics;
-    physics.speed = this._acceleration;
+    physics.speed =
+      this._acceleration * (Game.virtualController ? GUI.PORTRAIT_SCALAR : 1);
 
     if (this._thrusting) {
       physics.direction = this._currentDirection;
@@ -233,7 +270,7 @@ export default class PlayerController extends Container implements IGameEvents {
   };
 
   public onUpdate = (dt: number) => {
-    if (this.isReady()) {
+    if (this._player.visible) {
       this.updateShooting(dt);
       this.updateThrusting(dt);
     }
@@ -263,8 +300,8 @@ export default class PlayerController extends Container implements IGameEvents {
     this.angle = 0;
 
     let explosion = new PlayerExplosion(() => {
-      this.removeChild(explosion);
       this.reset();
+      this.removeChild(explosion);
       explosion = null;
     });
 

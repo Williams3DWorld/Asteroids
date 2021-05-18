@@ -1,6 +1,6 @@
 export const GameSettings = {
-  width: 1080, //window.innerWidth
-  height: 800, //window.innerHeight
+  width: window.innerWidth,
+  height: window.innerHeight,
   antialias: true,
   backgroundAlpha: 1,
   resolution: 1,

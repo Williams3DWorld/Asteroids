@@ -1,7 +1,7 @@
 import { Sprite } from "@pixi/sprite";
-import MovingObjectData from "./MovingObjectData";
+import MovingObjectData from "../Data/MovingObjectData";
 import * as TWEEN from "@tweenjs/tween.js";
-import Helpers from "./Helpers";
+import Helpers from "../Utils/Helpers";
 
 export default class Actor extends Sprite {
   protected _ready: boolean;

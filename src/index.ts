@@ -1,4 +1,4 @@
-import { Game } from "./Game";
+import { Game } from "./Game/Game";
 
 // Prevent right click contextBox
 document.addEventListener("contextmenu", (e) => {
