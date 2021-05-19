@@ -11,7 +11,6 @@ export default class Button extends Control {
     super(baseTexture);
 
     this._secondTexture = Game.assetLoader.getTexture(secondTexture);
-    this.alpha = 0.6;
 
     this.initBaseEvents();
 

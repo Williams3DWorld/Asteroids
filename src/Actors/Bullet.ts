@@ -8,13 +8,14 @@ import Helpers from "../Utils/Helpers";
 
 export default class Bullet extends Actor {
   public static readonly BULLET_WIDTH = 1;
-  public static readonly BULLET_HEIGHT = 3;
-  public static readonly BULLET_SPEED = 8;
-  public static readonly BULLET_LIFE_TIME =
-    2000 * (Helpers.isMobile() ? GUI.PORTRAIT_SCALAR : 1);
-  public static readonly BULLET_SPAWN_OFFSET = 16;
+  public static readonly BULLET_HEIGHT = 2;
+  public static readonly DEFAULT_BULLET_SPEED = 8;
+  public static readonly DEFAULT_BULLET_LIFE_TIME = Math.max(
+    window.innerWidth,
+    window.innerHeight
+  );
 
-  constructor() {
+  constructor(speed: number) {
     super();
 
     this.name = "Bullet";
@@ -23,11 +24,11 @@ export default class Bullet extends Actor {
 
     const scalar = Game.virtualController ? GUI.PORTRAIT_SCALAR : 1;
     this.data.physics = new PhysicsData(
-      Bullet.BULLET_HEIGHT,
-      Bullet.BULLET_SPEED * scalar,
+      Bullet.BULLET_HEIGHT * scalar,
+      speed * scalar,
       {
         x: 0,
-        y: 1,
+        y: -1,
       }
     );
 

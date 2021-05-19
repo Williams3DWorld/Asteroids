@@ -206,8 +206,8 @@ export default class AsteroidField extends Container implements IGameEvents {
     }
   };
 
-  public onPlayerHit = (asteroid: Actor) => {
-    //this.destroyAsteroid(asteroid);
+  public onAsteroidHitPlayer = (asteroid: Actor) => {
+    // Do nothing.
   };
 
   public onLevelComplete = () => {
@@ -219,4 +219,7 @@ export default class AsteroidField extends Container implements IGameEvents {
     this.destroyAsteroids();
     Helpers.timer(3000, () => this.reset());
   };
+
+  public onUfoHitPlayer = () => {};
+  public onPlayerHitUfo = () => {};
 }

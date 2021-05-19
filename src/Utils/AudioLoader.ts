@@ -19,27 +19,27 @@ export default class AudioLoader {
     });
   };
 
-  private validateObject = (name: string) => {
-    console.assert(this._audioClips[name]);
+  private invalidObject = (name: string) => {
+    return this._audioClips[name] == null;
   };
 
   public play = (name: string) => {
-    this.validateObject(name);
+    if (this.invalidObject(name)) return;
     this._audioClips[name].play();
   };
 
   public setLoop = (name: string, value: boolean) => {
-    this.validateObject(name);
+    if (this.invalidObject(name)) return;
     this._audioClips[name].loop(value);
   };
 
   public setRate = (name: string, value: number) => {
-    this.validateObject(name);
+    if (this.invalidObject(name)) return;
     this._audioClips[name].rate(value);
   };
 
   public stop = (name: string) => {
-    this.validateObject(name);
+    if (this.invalidObject(name)) return;
     this._audioClips[name].stop();
   };
 }

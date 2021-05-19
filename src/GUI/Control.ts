@@ -24,7 +24,7 @@ export default class Control extends Container {
 
     this._baseSprite.interactive = true;
 
-    this.alpha = 0.5;
+    this.alpha = 0.8;
 
     this.initBaseEvents();
   }
@@ -36,11 +36,11 @@ export default class Control extends Container {
     });
     this._baseSprite.on("touchend", () => {
       this._active = false;
-      this.alpha = 0.5;
+      this.alpha = 0.8;
     });
     this._baseSprite.on("touchendoutside", () => {
-      this._active = true;
-      this.alpha = 0.5;
+      this._active = false;
+      this.alpha = 0.8;
     });
   };
 

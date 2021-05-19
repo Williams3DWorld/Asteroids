@@ -1,5 +1,4 @@
 import { Game, IGameEvents } from "../Game/Game";
-import { GameSettings } from "../Config/GameSettings";
 import Player from "../Actors/Player";
 import { Container, Texture, Sprite } from "pixi.js";
 import * as TWEEN from "@tweenjs/tween.js";
@@ -9,7 +8,8 @@ import Actor from "../Actors/Actor";
 import PlayerExplosion from "../FX/PlayerExplosion";
 import MovingObjectData from "../Data/MovingObjectData";
 import GUI from "./GUI";
-import { VirtualButtons, VirtualControls } from "../GUI/VirtualController";
+import { VirtualButtons } from "../GUI/VirtualController";
+import LaserGun from "../FX/LaserGun";
 
 enum ButtonEvents {
   FIRE,
@@ -19,20 +19,17 @@ enum ButtonEvents {
 export default class PlayerController extends Container implements IGameEvents {
   public static readonly SHOOT_DELAY = 200;
   public static readonly ACCELERATION_RATE = 0.1;
-  public static readonly DECCELERATION_RATE = 0.01;
+  public static readonly FRICTION = 0.01;
+  public static readonly LASER_GUN_OFFSET = 16;
 
-  private _bullets: Array<Actor>;
-  public get bullets(): Array<Actor> {
-    return this._bullets;
+  private _laserGun: LaserGun;
+  public get laserGun(): LaserGun {
+    return this._laserGun;
   }
 
   private _mousePos: any;
   private _player: Player;
-  private _acceleration: number;
   private _thrusting: boolean;
-  private _shooting: boolean;
-  private _shootIntervalTween: any;
-  private _currentDirection: any;
   private _thrustFlame: Sprite;
   private _thrustTween: any;
 
@@ -41,13 +38,18 @@ export default class PlayerController extends Container implements IGameEvents {
 
     this.name = "PlayerController";
     this._mousePos = { x: 0, y: 0 };
-    this._shooting = false;
     this._thrusting = false;
-    this._acceleration = 0;
-    this._bullets = new Array();
+    this._laserGun = new LaserGun(
+      PlayerController.LASER_GUN_OFFSET,
+      PlayerController.SHOOT_DELAY,
+      Bullet.DEFAULT_BULLET_LIFE_TIME,
+      Bullet.DEFAULT_BULLET_SPEED,
+      () => Game.audioManager.play("fire")
+    );
     this._player = new Player();
 
     this.addChild(this._player);
+    this.addChild(this._laserGun);
 
     this.resetTransform();
     this.initialiseThruster();
@@ -65,15 +67,16 @@ export default class PlayerController extends Container implements IGameEvents {
         if (this.isReady()) this.stopThruster();
       });
       control.bindButtonDownEvent(VirtualButtons.BTN_FIRE, () => {
-        if (this.isReady()) this.startShooting();
+        if (this.isReady()) this._laserGun.startShooting();
       });
       control.bindButtonUpEvent(VirtualButtons.BTN_FIRE, () => {
-        if (this.isReady()) this.stopShooting();
+        if (this.isReady()) this._laserGun.stopShooting();
       });
       control.bindDialMoveEvent(() => {
         if (this.isReady()) {
           const dialAngle = control.dial.angle;
           this.angle = dialAngle;
+          this._laserGun.updateLookAngle(this.rotation);
         }
       });
     }
@@ -96,21 +99,9 @@ export default class PlayerController extends Container implements IGameEvents {
       .repeat(Number.POSITIVE_INFINITY);
   };
 
-  private startShooting = () => {
-    this._shooting = true;
-  };
-
-  private stopShooting = () => {
-    this._shooting = false;
-    this._shootIntervalTween?.stop();
-    this._shootIntervalTween = null;
-  };
-
   private startThruster = () => {
     this._thrusting = true;
     this._thrustTween.start();
-    //this.updateLook();
-    this._currentDirection = this.getDirectionFromRadians(this.rotation);
     Game.audioManager.play("thrust");
   };
 
@@ -124,12 +115,12 @@ export default class PlayerController extends Container implements IGameEvents {
     this.position.x = window.innerWidth / 2;
     this.position.y = window.innerHeight / 2;
     this.angle = Game.virtualController ? Game.virtualController.dial.angle : 0;
+    this._laserGun.updateLookAngle(this.rotation);
   };
 
   private reset = () => {
     this._thrusting = false;
-    this._shooting = false;
-    this._acceleration = 0;
+    this._laserGun.setShootingState(false);
 
     this.resetTransform();
 
@@ -144,43 +135,23 @@ export default class PlayerController extends Container implements IGameEvents {
     return this._player.data;
   };
 
+  public getPlayerObject = () => {
+    return this._player;
+  };
+
   private updateLook = () => {
     const dx = this._mousePos.x - this.position.x;
     const dy = this._mousePos.y - this.position.y;
     const angle = (Math.atan2(dy, dx) * 180) / Math.PI + 90;
     this.angle = angle;
-  };
-
-  private createBullet = () => {
-    const bullet = new Bullet();
-    bullet.rotation = this.rotation;
-    bullet.data.physics.direction.x = Math.sin(this.rotation);
-    bullet.data.physics.direction.y = -Math.cos(this.rotation);
-    bullet.x =
-      this.x + bullet.data.physics.direction.x * Bullet.BULLET_SPAWN_OFFSET;
-    bullet.y =
-      this.y + bullet.data.physics.direction.y * Bullet.BULLET_SPAWN_OFFSET;
-    return bullet;
-  };
-
-  private shoot = () => {
-    const bullet = this.createBullet();
-    this.parent.addChild(bullet);
-
-    Helpers.timer(Bullet.BULLET_LIFE_TIME, () => {
-      this._bullets[0]?.destroy();
-      this._bullets.shift();
-    });
-
-    Game.audioManager.play("fire");
-    this._bullets.push(bullet);
+    this._laserGun.updateLookAngle(this.rotation);
   };
 
   private updateMovement = (dt) => {
     this._player.onUpdate(dt);
 
-    this.x += this._player.data.physics.velocity.x * dt;
-    this.y += this._player.data.physics.velocity.y * dt;
+    this.x += this._player.thrust.x * dt;
+    this.y += this._player.thrust.y * dt;
   };
 
   public updateMousePos = (e: any) => {
@@ -194,7 +165,7 @@ export default class PlayerController extends Container implements IGameEvents {
   public updateMouseButtonDown = (button: number) => {
     if (this.isReady()) {
       if (button == ButtonEvents.FIRE) {
-        this.startShooting();
+        this._laserGun.startShooting();
       } else if (ButtonEvents.THRUST) {
         this.startThruster();
       }
@@ -204,7 +175,7 @@ export default class PlayerController extends Container implements IGameEvents {
   public updateMouseButtonUp = (button: number) => {
     if (this.isReady()) {
       if (button == ButtonEvents.FIRE) {
-        this.stopShooting();
+        this._laserGun.stopShooting();
       } else if (ButtonEvents.THRUST) {
         this.stopThruster();
       }
@@ -218,83 +189,38 @@ export default class PlayerController extends Container implements IGameEvents {
   };
 
   private updateThrusting = (dt: number) => {
+    const finalDt = (Game.virtualController ? GUI.PORTRAIT_SCALAR : 1) * dt;
     const physics = this._player.data.physics;
-    physics.speed =
-      this._acceleration * (Game.virtualController ? GUI.PORTRAIT_SCALAR : 1);
+    physics.direction = this.getDirectionFromRadians(this.rotation);
 
     if (this._thrusting) {
-      physics.direction = this._currentDirection;
-      if (this._acceleration < Player.MAX_SPEED)
-        this._acceleration += PlayerController.ACCELERATION_RATE * dt;
-      else {
-        this._acceleration = Player.MAX_SPEED;
-      }
+      this._player.thrust.x +=
+        PlayerController.ACCELERATION_RATE * physics.direction.x * finalDt;
+      this._player.thrust.y +=
+        PlayerController.ACCELERATION_RATE * physics.direction.y * finalDt;
     } else {
-      if (this._acceleration > 0)
-        this._acceleration -= PlayerController.DECCELERATION_RATE * dt;
-      else this._acceleration = 0;
+      this._player.thrust.x -=
+        PlayerController.FRICTION * this._player.thrust.x * finalDt;
+      this._player.thrust.y -=
+        PlayerController.FRICTION * this._player.thrust.y * finalDt;
     }
 
-    physics.velocity = {
-      x: physics.direction.x * physics.speed,
-      y: physics.direction.y * physics.speed,
-    };
-
-    this.updateMovement(dt);
-  };
-
-  private updateShooting = (dt: number) => {
-    if (this._shooting) {
-      if (!this._shootIntervalTween) {
-        const time = { t: 0 };
-        this._shootIntervalTween = new TWEEN.Tween(time)
-          .onStart(() => {
-            this.shoot();
-          })
-          .to({ t: 1 }, PlayerController.SHOOT_DELAY)
-          .repeat(Number.POSITIVE_INFINITY)
-          .onRepeat(() => {
-            this.shoot();
-          })
-          .start();
-      }
-    }
-
-    this._bullets.forEach((bullet) => {
-      bullet.onUpdate(dt);
-    });
+    this.updateMovement(finalDt);
   };
 
   public addLife = () => {
     this._player.data.lives++;
   };
 
-  public onUpdate = (dt: number) => {
-    if (this._player.visible) {
-      this.updateShooting(dt);
-      this.updateThrusting(dt);
-    }
-
-    this._thrustFlame.visible = this._thrusting;
-    Helpers.updateScreenWrap(this, this._player.data.physics.radius);
-  };
-
-  public onAsteroidHit = (asteroid: Actor, bullet: Actor) => {
-    bullet.visible = false;
-  };
-
-  public onPlayerHit = (asteroid: Actor) => {
+  private playerHit = () => {
     this._player.data.lives--;
 
     if (this._player.data.lives < 1) {
       this.game.dispatchGameOver();
     }
 
-    this._shootIntervalTween?.stop();
-    this._shootIntervalTween = null;
+    this._laserGun.destroyBulletProjectiles();
 
-    this._bullets.forEach((bullet) => bullet.destroy());
-    this._bullets = [];
     this._player.setReady = false;
     this._player.visible = false;
     this.angle = 0;
@@ -309,10 +235,34 @@ export default class PlayerController extends Container implements IGameEvents {
     this.stopThruster();
   };
 
+  public onUpdate = (dt: number) => {
+    if (this._player.visible) {
+      this._laserGun.update(dt);
+      this.updateThrusting(dt);
+    }
+
+    this._thrustFlame.visible = this._thrusting;
+    Helpers.updateScreenWrap(this, this._player.data.physics.radius);
+  };
+
+  public onAsteroidHit = (asteroid: Actor, bullet: Actor) => {
+    bullet.visible = false;
+  };
+
+  public onAsteroidHitPlayer = (asteroid: Actor) => {
+    this.playerHit();
+  };
+
   public onGameOver = () => {
     this._player.data.lives = MovingObjectData.MAX_LIVES;
     this.stopThruster();
   };
 
   public onLevelComplete = () => {};
+
+  public onUfoHitPlayer = () => {
+    this.playerHit();
+  };
+
+  public onPlayerHitUfo = () => {};
 }

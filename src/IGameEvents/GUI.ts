@@ -10,7 +10,11 @@ import Helpers from "../Utils/Helpers";
 import VirtualController from "../GUI/VirtualController";
 
 export default class GUI extends Container implements IGameEvents {
-  public static PORTRAIT_SCALAR: number = 1; //window.innerHeight / window.innerWidth;
+  // public static PORTRAIT_SCALAR: number =
+  //   window.innerHeight / window.innerWidth;
+
+  // Gamejolt format
+  public static PORTRAIT_SCALAR: number = 1;
 
   private _hud: Container;
   private _lives: Array<Sprite>;
@@ -28,7 +32,6 @@ export default class GUI extends Container implements IGameEvents {
 
     if (virtualController) {
       this.addChild(virtualController);
-      //this.scale.set(GUI.PORTRAIT_SCALAR);
     }
   }
 
@@ -104,7 +107,7 @@ export default class GUI extends Container implements IGameEvents {
     this._score.text = this.game.score.toString();
   };
 
-  onPlayerHit = (asteroid: Actor) => {
+  onAsteroidHitPlayer = (asteroid: Actor) => {
     this.removeLife();
   };
 
@@ -118,4 +121,12 @@ export default class GUI extends Container implements IGameEvents {
   };
 
   onLevelComplete = () => {};
+
+  public onUfoHitPlayer = () => {
+    this.removeLife();
+  };
+
+  public onPlayerHitUfo = () => {
+    this._score.text = this.game.score.toString();
+  };
 }

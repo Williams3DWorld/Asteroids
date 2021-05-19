@@ -1,11 +1,11 @@
 {
   "frames": {
-    "asteroid_0.png": {
+    "asteroid_1.png": {
       "frame": {
-        "x": 1,
-        "y": 1,
+        "x": 2,
+        "y": 2,
         "w": 65,
-        "h": 48
+        "h": 50
       },
       "rotated": false,
       "trimmed": false,
@@ -13,59 +13,35 @@
         "x": 0,
         "y": 0,
         "w": 65,
-        "h": 48
+        "h": 50
       },
       "sourceSize": {
         "w": 65,
-        "h": 48
+        "h": 50
       },
       "pivot": {
         "x": 0.5,
         "y": 0.5
       }
     },
-    "asteroid_1.png": {
+    "asteroid_0.png": {
       "frame": {
-        "x": 1,
-        "y": 51,
-        "w": 64,
-        "h": 50
+        "x": 71,
+        "y": 2,
+        "w": 65,
+        "h": 49
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
         "x": 1,
         "y": 0,
-        "w": 64,
-        "h": 50
-      },
-      "sourceSize": {
         "w": 65,
-        "h": 50
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "ufo.png": {
-      "frame": {
-        "x": 68,
-        "y": 1,
-        "w": 52,
-        "h": 28
-      },
-      "rotated": true,
-      "trimmed": true,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 52,
-        "h": 28
+        "h": 49
       },
       "sourceSize": {
-        "w": 52,
-        "h": 29
+        "w": 66,
+        "h": 49
       },
       "pivot": {
         "x": 0.5,
@@ -74,22 +50,22 @@
     },
     "space_shuttle.png": {
       "frame": {
-        "x": 67,
-        "y": 55,
-        "w": 18,
+        "x": 140,
+        "y": 2,
+        "w": 17,
         "h": 26
       },
-      "rotated": true,
+      "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 1,
-        "y": 1,
-        "w": 18,
+        "x": 0,
+        "y": 0,
+        "w": 17,
         "h": 26
       },
       "sourceSize": {
-        "w": 19,
-        "h": 27
+        "w": 18,
+        "h": 26
       },
       "pivot": {
         "x": 0.5,
@@ -98,21 +74,21 @@
     },
     "life.png": {
       "frame": {
-        "x": 67,
-        "y": 75,
+        "x": 140,
+        "y": 32,
         "w": 18,
-        "h": 21
+        "h": 22
       },
       "rotated": false,
-      "trimmed": true,
+      "trimmed": false,
       "spriteSourceSize": {
-        "x": 1,
-        "y": 1,
+        "x": 0,
+        "y": 0,
         "w": 18,
-        "h": 21
+        "h": 22
       },
       "sourceSize": {
-        "w": 19,
+        "w": 18,
         "h": 22
       },
       "pivot": {
@@ -127,8 +103,8 @@
     "image": "atlas.png",
     "format": "RGBA8888",
     "size": {
-      "w": 97,
-      "h": 102
+      "w": 160,
+      "h": 56
     },
     "scale": 1
   }

@@ -18,13 +18,17 @@ import { AsteroidPointData } from "../Actors/Asteroid";
 import MovingObjectData from "../Data/MovingObjectData";
 import AudioManager from "../Utils/AudioLoader";
 import VirtualController from "../GUI/VirtualController";
+import UFOField from "../IGameEvents/UFOField";
+import { UFOPointData } from "../Actors/UFO";
 
 export interface IGameEvents {
   onUpdate(dt: number): void;
   onAsteroidHit(asteroid: Actor, bullet: Actor): void;
-  onPlayerHit(asteroid: Actor): void;
+  onAsteroidHitPlayer(asteroid: Actor): void;
   onGameOver(): void;
   onLevelComplete(): void;
+  onUfoHitPlayer(): void;
+  onPlayerHitUfo(): void;
 }
 
 export class Game {
@@ -58,6 +62,7 @@ export class Game {
   private _gui: GUI;
   private _player: PlayerController;
   private _asteroidField: AsteroidField;
+  private _ufoField: UFOField;
   private _interaction: InteractionManager;
   private _extraLifeAcculator: number;
   private _gameOver: boolean;
@@ -112,9 +117,9 @@ export class Game {
     app.renderer.view.style.left = "50%";
     app.renderer.view.style.top = "50%";
     app.renderer.view.style.transform = "translate3d( -50%, -50%, 0)";
-    // app.renderer.view.style.transform = "rotate(0deg)";
 
     this._stage = app.stage;
+    this._stage.name = "Stage";
     this._interaction = new InteractionManager(this._pixiApp.renderer, {});
   };
 
@@ -130,6 +135,8 @@ export class Game {
 
     Game.audioManager = new AudioManager();
     Game.audioManager.setLoop("thrust", true);
+    Game.audioManager.setLoop("ufo1", true);
+    Game.audioManager.setLoop("ufo2", true);
   };
 
   public initialise = () => {
@@ -140,9 +147,11 @@ export class Game {
 
   private initialiseGame = () => {
     this._player = new PlayerController(this);
-    this._stage.addChild(this._player);
     this._asteroidField = new AsteroidField(this);
+    this._ufoField = new UFOField(this, this._player);
+    this._stage.addChild(this._player);
     this._stage.addChild(this._asteroidField);
+    this._stage.addChild(this._ufoField);
 
     this.initialiseEvents();
 
@@ -192,8 +201,8 @@ export class Game {
   private updateBulletAsteroidCollision = () => {
     for (let i = 0; i < this._asteroidField.asteroids.length; i++) {
       const asteroid = this._asteroidField.asteroids[i];
-      for (let j = 0; j < this._player.bullets.length; j++) {
-        const bullet = this._player.bullets[j];
+      for (let j = 0; j < this._player.laserGun.bullets.length; j++) {
+        const bullet = this._player.laserGun.bullets[j];
         if (asteroid.isReady && bullet.visible) {
           if (
             Helpers.intersect(
@@ -208,8 +217,29 @@ export class Game {
             this.score += AsteroidPointData[asteroid.data.lives - 1];
             this._player.onAsteroidHit(asteroid, bullet);
             this._asteroidField.onAsteroidHit(asteroid, bullet);
+            this._ufoField.onAsteroidHit(asteroid, bullet);
             this._gui.onAsteroidHit(asteroid, bullet);
             break;
+          }
+        }
+        if (this._ufoField.ufo) {
+          const ufo = this._ufoField.ufo;
+          if (
+            Helpers.intersect(
+              bullet.x,
+              bullet.y,
+              ufo.x,
+              ufo.y,
+              bullet.data.physics.radius,
+              ufo.data.physics.radius
+            )
+          ) {
+            const pointIndex = this._ufoField.ufo?.iqLevel;
+            this.score += UFOPointData[pointIndex - 1];
+
+            this._player.onPlayerHitUfo();
+            this._ufoField.onPlayerHitUfo();
+            this._gui.onPlayerHitUfo();
           }
         }
       }
@@ -230,11 +260,43 @@ export class Game {
             asteroid.data.physics.radius
           )
         ) {
-          this._player.onPlayerHit(asteroid);
-          this._asteroidField.onPlayerHit(asteroid);
-          this._gui.onPlayerHit(asteroid);
+          this._player.onAsteroidHitPlayer(asteroid);
+          this._asteroidField.onAsteroidHitPlayer(asteroid);
+          this._ufoField.onAsteroidHitPlayer(asteroid);
+          this._gui.onAsteroidHitPlayer(asteroid);
 
           break;
+        }
+      }
+    }
+  };
+
+  private updateUfoHitPlayerCollision = () => {
+    if (this._ufoField.ufo != null) {
+      const ufo = this._ufoField.ufo;
+      for (let i = 0; i < ufo.laserGun.bullets.length; i++) {
+        const bullet = ufo.laserGun.bullets[i];
+        if (this._player.isReady()) {
+          if (
+            Helpers.intersect(
+              bullet.x,
+              bullet.y,
+              this._player.x,
+              this._player.y,
+              bullet.data.physics.radius,
+              this._player.getData().physics.radius
+            )
+          ) {
+            this._ufoField.onUfoHitPlayer();
+            this._player.onUfoHitPlayer();
+            this._asteroidField.onUfoHitPlayer();
+            this._gui.onUfoHitPlayer();
+            Helpers.timer(2500, () => {
+              this._ufoField.destroyUfo();
+              if (!this._gameOver) this._ufoField.queueSpawn();
+            });
+            break;
+          }
         }
       }
     }
@@ -266,16 +328,21 @@ export class Game {
     this._level = 1;
     this._player.onGameOver();
     this._asteroidField.onGameOver();
+    this._ufoField.onGameOver();
     this._gui.onGameOver();
     this.resetLevel();
     this.resetScore();
     this._gameOver = true;
-    Helpers.timer(3000, () => (this._gameOver = false));
+    Helpers.timer(3000, () => {
+      this._gameOver = false;
+      this._ufoField.queueSpawn();
+    });
   };
 
   public dispatchLevelComplete = () => {
     this._level++;
     this._asteroidField.onLevelComplete();
+    this._ufoField.onLevelComplete();
     this.resetLevel();
   };
 
@@ -313,15 +380,17 @@ export class Game {
   private updateCollisions = () => {
     this.updateBulletAsteroidCollision();
     this.updateAsteroidPlayerCollision();
+    this.updateUfoHitPlayerCollision();
   };
 
   public onUpdate = (dt: number) => {
-    //GameSettings.width = window.innerWidth;
-    //GameSettings.height = window.innerHeight;
+    GameSettings.width = window.innerWidth;
+    GameSettings.height = window.innerHeight;
     this._pixiApp.renderer.resize(GameSettings.width, GameSettings.height);
 
     this._player.onUpdate(dt);
     this._asteroidField.onUpdate(dt);
+    this._ufoField.onUpdate(dt);
     this.updateCollisions();
     this.updateExtraLives();
     if (!this._gameOver) this.updateWaveSound(dt);

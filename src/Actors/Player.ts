@@ -10,10 +10,13 @@ export default class Player extends Actor {
   public static readonly MAX_SPEED = 3;
   public static readonly SPAWN_DELAY = 1;
 
+  public thrust: any;
+
   constructor() {
     super();
 
     this.name = "Player";
+    this.thrust = { x: 0, y: 0 };
     this.data = new MovingObjectData();
     this.data.lives = MovingObjectData.MAX_LIVES;
     this.data.physics = new PhysicsData(Player.DEFUALT_SIZE, 0, { x: 0, y: 1 });
@@ -24,15 +27,13 @@ export default class Player extends Actor {
 
   public reset = () => {
     this.visible = false;
+    this.thrust.x = 0;
+    this.thrust.y = 0;
     Helpers.timer(Player.SPAWN_DELAY * 1000, () => {
       this.visible = true;
       this._ready = true;
     });
   };
 
-  public onUpdate = (dt) => {
-    const physics = this.data.physics;
-    physics.velocity.x = physics.direction.x * physics.speed;
-    physics.velocity.y = physics.direction.y * physics.speed;
-  };
+  public onUpdate = (dt) => {};
 }

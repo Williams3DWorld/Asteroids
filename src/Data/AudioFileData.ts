@@ -7,4 +7,6 @@ export const SoundData = [
   { url: "assets/sounds/bangLarge.wav", name: "bang2" },
   { url: "assets/sounds/beat1.wav", name: "beat0" },
   { url: "assets/sounds/beat2.wav", name: "beat1" },
+  { url: "assets/sounds/saucerSmall.wav", name: "ufo2" },
+  { url: "assets/sounds/saucerBig.wav", name: "ufo1" },
 ];
